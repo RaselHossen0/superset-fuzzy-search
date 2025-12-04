@@ -1,51 +1,36 @@
 # Apache Superset - Fuzzy Search Enhancement
 
-## Overview
+## 📋 Overview
 
-This project enhances Apache Superset's table visualization with fuzzy search functionality, allowing users to quickly find relevant data even with typos or partial search terms.
+This project enhances Apache Superset's table visualization with **fuzzy search functionality**, allowing users to quickly find relevant data even with typos or partial search terms. The implementation uses **Fuse.js** for client-side fuzzy matching with **real-time result highlighting**.
 
-## Features Implemented
+---
 
-### ✅ Search Input Field
-- Added visible search box above table visualizations
-- Real-time search with 200ms debounce for performance
-- Shows record count in placeholder
+## 1️⃣ Installation Instructions
 
-### ✅ Fuzzy Matching (Fuse.js)
-- **Partial matches**: "Korea" or "Kore" finds "South Korea" ✅
-- **Missing characters**: "vaccin" finds "vaccine" ✅
-- **Case insensitive**: "dna" matches "DNA-based" ✅
-- **Cross-column search**: Searches all visible columns simultaneously ✅
+### Option A: Docker + Local Frontend Dev Server (Recommended)
 
-### ⚠️ Current Limitations (Default threshold: 0.4)
-- **Character transpositions**: "Koera" does NOT match "Korea"
-- **Character swaps**: "Barzil" does NOT match "Brazil"
-- **Fix available**: Increase threshold to 0.6 in DataTable.tsx (requires rebuild)
-
-### ✅ Performance
-- Handles 236+ rows efficiently (tested with COVID vaccines dataset)
-- Client-side filtering for instant results
-- Debounced input to prevent excessive re-renders
-
-### ✅ User Experience
-- Clean search interface integrated with table controls
-- "No matching records found" message for empty results
-- Maintains pagination with filtered results
-
-## Installation Instructions
-
-### Using Docker (Recommended)
 ```bash
 # Clone the repository
-git clone https://github.com/apache/superset.git
-cd superset
+git clone https://github.com/RaselHossen0/superset-fuzzy-search.git
+cd superset-fuzzy-search
 
-# Pull and start containers
-docker compose -f docker-compose-non-dev.yml pull
-docker compose -f docker-compose-non-dev.yml up
+# Start backend services with Docker
+docker compose -f docker-compose-non-dev.yml up -d
+
+# Install frontend dependencies
+cd superset-frontend
+npm install
+
+# Start frontend dev server (sees your code changes)
+NODE_OPTIONS="--max-old-space-size=8192" npm run dev-server -- --port 9001
 ```
 
-### Local Installation
+Access at: **http://localhost:9001**  
+Login: `admin` / `admin`
+
+### Option B: Local Python Installation
+
 ```bash
 # Create virtual environment with Python 3.11
 python3.11 -m venv ~/venvs/superset
@@ -61,113 +46,197 @@ superset fab create-admin
 superset load_examples
 superset init
 
-# Run
+# Run backend
 superset run -h 0.0.0.0 -p 8088
+
+# In another terminal, run frontend
+cd superset-frontend && npm run dev-server -- --port 9001
 ```
 
-## How to Enable Fuzzy Search
+---
 
-1. Create or edit a **Table** chart
-2. Go to **Customize** tab
-3. Enable **"Search box"** checkbox ✅
-4. Click **Update chart** and **Save**
+## 2️⃣ Feature Overview
 
-## Testing Instructions
+### ✅ Implemented Features
 
-### Test Cases
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Search Input Field** | Visible search box above table visualizations | ✅ Done |
+| **Fuzzy Matching** | Typo-tolerant search using Fuse.js (threshold: 0.6) | ✅ Done |
+| **Result Highlighting** | Yellow highlight on matching text (exact & fuzzy) | ✅ Done |
+| **Real-time Search** | 200ms debounce for optimal performance | ✅ Done |
+| **1000+ Row Support** | Efficient client-side filtering | ✅ Done |
+| **Cross-column Search** | Searches all visible columns | ✅ Done |
 
-| Test Type | Search Query | Expected Result | Status |
-|-----------|--------------|-----------------|--------|
-| Exact match | `South Korea` | Shows South Korea rows | ✅ Works |
-| Partial match | `Korea` | Shows South Korea rows | ✅ Works |
-| Partial match | `Kore` | Shows South Korea rows | ✅ Works |
-| Missing char | `vaccin` | Shows vaccine rows | ✅ Works |
-| Case insensitive | `DNA` or `dna` | Shows DNA-based rows | ✅ Works |
-| Cross-column | `University` | Matches developer column | ✅ Works |
-| Single char | `a` | Shows Argentina, Australia, etc. | ✅ Works |
-| Typo (swap) | `Koera` | Should match Korea | ❌ Not working |
-| Typo (swap) | `Barzil` | Should match Brazil | ❌ Not working |
-| No results | `xyz123` | Shows "No matching records" | ✅ Works |
+### How It Works
 
-### Testing with COVID Vaccines Dataset
-1. Navigate to Datasets → covid_vaccines
-2. Create a Table chart with columns: country_name, product_category, clinical_stage, developer_or_researcher, product_description, funder
-3. Enable search box in Customize tab
-4. Test various search queries
+1. **User types in search box** → Input is debounced (200ms)
+2. **Fuse.js fuzzy search** → Matches are found with typo tolerance
+3. **Results filtered** → Table shows only matching rows
+4. **Highlighting applied** → Matched words are highlighted in yellow
 
-## Code Changes Summary
+### Fuzzy Matching Examples
+
+| Search Query | Finds | Why |
+|--------------|-------|-----|
+| `Korea` | "South Korea" | Exact substring match |
+| `Koera` | "South Korea" | Character transposition (fuzzy) |
+| `Barzil` | "Brazil" | Character swap (fuzzy) |
+| `vaccin` | "vaccine" | Missing character |
+| `protien` | "Protein" | Typo correction |
+| `DNA` | "DNA-based" | Case insensitive |
+
+---
+
+## 3️⃣ Code Changes Summary
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `superset-frontend/plugins/plugin-chart-table/src/DataTable/DataTable.tsx` | Fixed Fuse.js type imports, enhanced fuzzy search configuration |
-| `superset-frontend/plugins/plugin-chart-table/src/DataTable/components/GlobalFilter.tsx` | Search input component (existing) |
+| File | Changes |
+|------|---------|
+| `superset-frontend/plugins/plugin-chart-table/src/DataTable/DataTable.tsx` | Enhanced Fuse.js config with threshold 0.6, includeScore, findAllMatches |
+| `superset-frontend/plugins/plugin-chart-table/src/TableChart.tsx` | Added fuzzy highlighting logic with `isFuzzyMatch()` helper |
+| `superset-frontend/webpack.config.js` | Switched from swc-loader to babel-loader for macOS compatibility |
+| `superset-frontend/package.json` | Added `query-string: 6.14.1` override for ESM compatibility |
+| `docker-compose-non-dev.yml` | Added `DEV_MODE: true`, removed cache_from |
 
-### Build Note
-The pip-installed version of Superset uses pre-compiled frontend assets. To see the enhanced fuzzy search configuration (`threshold: 0.6`), a frontend rebuild would be required. Due to webpack/SWC compatibility issues on macOS (thread-loader and babel-loader conflicts), the source code changes are provided but the live demo uses the default Fuse.js configuration (`threshold: 0.4`).
+### Key Code Changes
 
-### Key Configuration (DataTable.tsx)
+#### DataTable.tsx - Fuzzy Search Configuration
 ```typescript
 const fuseOptions: IFuseOptions<Row<D>> = {
   keys: columnIds.map(columnId => ({
     name: `values.${String(columnId)}`,
     weight: 1,
   })),
-  threshold: 0.6,        // Fuzzy matching tolerance (0-1, higher = more lenient)
-  ignoreLocation: true,  // Match anywhere in string
-  minMatchCharLength: 2, // Minimum characters to trigger search
-  includeScore: true,    // For potential highlighting
-  findAllMatches: true,  // Find all possible matches
+  threshold: 0.6,          // More lenient for typo tolerance (was 0.4)
+  ignoreLocation: true,    // Match anywhere in string
+  minMatchCharLength: 2,
+  includeScore: true,      // For highlighting
+  findAllMatches: true,    // Better word boundary handling
 };
 ```
 
-## Future Improvements
+#### TableChart.tsx - Fuzzy Highlighting
+```typescript
+// Helper function to check fuzzy match
+const isFuzzyMatch = (word: string, query: string): boolean => {
+  const wordLower = word.toLowerCase();
+  const queryLower = query.toLowerCase();
+  
+  // Exact substring match
+  if (wordLower.includes(queryLower) || queryLower.includes(wordLower)) {
+    return true;
+  }
+  
+  // Character overlap check (60% threshold)
+  let matchingChars = 0;
+  for (const char of queryLower) {
+    if (wordLower.includes(char)) matchingChars++;
+  }
+  return matchingChars / queryLower.length >= 0.6 && wordLower.length >= 2;
+};
+```
+
+---
+
+## 4️⃣ Testing Instructions
+
+### Step 1: Create a Table Chart
+1. Navigate to **Charts** → **+ Chart**
+2. Select dataset: `covid_vaccines` or `birth_names`
+3. Choose chart type: **Table**
+4. Add 5+ columns (e.g., country_name, product_category, clinical_stage, etc.)
+5. Set **Row limit**: 1000 or more
+6. Click **Update chart** → **Save**
+
+### Step 2: Enable Search Box
+1. Go to **Customize** tab
+2. Enable **"Search box"** ✅
+3. Click **Update chart**
+
+### Step 3: Run Test Cases
+
+| Test # | Search Query | Expected Result | Pass/Fail |
+|--------|--------------|-----------------|-----------|
+| 1 | `South Korea` | Exact match, highlighted | ✅ |
+| 2 | `Korea` | Partial match, "Korea" highlighted | ✅ |
+| 3 | `Koera` | Fuzzy match finds "Korea" (typo) | ✅ |
+| 4 | `Barzil` | Fuzzy match finds "Brazil" | ✅ |
+| 5 | `protien` | Fuzzy match finds "Protein" | ✅ |
+| 6 | `DNA` | Case insensitive match | ✅ |
+| 7 | `xyz123` | Shows "No matching records" | ✅ |
+| 8 | Type fast | Debounce prevents lag | ✅ |
+
+### Step 4: Performance Test
+- Load 1000+ rows
+- Search should complete in <100ms
+- No UI lag or freezing
+
+---
+
+## 5️⃣ Future Improvements
 
 With more time, the following enhancements could be added:
 
-1. **Result Highlighting** - Highlight matching text in search results
-2. **Server-side Search** - For datasets > 10,000 rows using PostgreSQL full-text search
-3. **Advanced Query Syntax** - Support AND/OR operators
-4. **Search History** - Remember recent searches
-5. **Column-specific Search** - Allow searching specific columns only
-6. **Export Filtered Results** - Download filtered data as CSV
+| Improvement | Description | Priority |
+|-------------|-------------|----------|
+| **Server-side Search** | PostgreSQL full-text search for datasets >10k rows | High |
+| **Search Operators** | Support AND/OR/NOT query syntax | Medium |
+| **Column Filtering** | Search specific columns only | Medium |
+| **Search History** | Remember recent searches | Low |
+| **Export Filtered** | Download filtered results as CSV | Low |
+| **Highlight Intensity** | Vary highlight color based on match score | Low |
 
-## Screenshots
+---
 
-### Before (No Search Box)
+## 6️⃣ Screenshots
+
+### Before: Table without Search
 ![Before](screenshots/before-no-search.png)
+*Table visualization without search functionality*
 
-### After (Search Enabled)
-![After](screenshots/after-search-korea.png)
+### After: Fuzzy Search with Highlighting
+![After](screenshots/after-fuzzy-search.png)
+*Searching "Koera" finds "South Korea" with yellow highlighting*
 
 ### Search Results
-![Results](screenshots/search-results.png)
+![Results](screenshots/search-results-highlighted.png)
+*Multiple matches highlighted across columns*
+
+---
 
 ## Technology Stack
 
-- **Frontend**: React, TypeScript
+- **Frontend**: React 18, TypeScript
 - **Fuzzy Search**: Fuse.js v7.x
-- **Backend**: Python Flask
+- **Build Tool**: Webpack 5 + Babel
+- **Backend**: Python Flask, SQLAlchemy
 - **Database**: PostgreSQL (via Docker)
+- **Container**: Docker Compose
+
+---
 
 ## Author
 
 **Rasel Hossen**  
 December 2024
 
+---
+
 ## Time Log
 
 | Task | Time Spent |
 |------|------------|
-| Environment Setup | ~45 min |
+| Environment Setup (Docker + Local) | ~60 min |
 | Dataset Exploration | ~15 min |
-| Technical Design | ~20 min |
-| Implementation/Testing | ~30 min |
-| Documentation | ~20 min |
-| **Total** | **~2 hours** |
+| Technical Design Document | ~20 min |
+| Fuzzy Search Implementation | ~45 min |
+| Highlighting Implementation | ~30 min |
+| Bug Fixes (webpack, babel, query-string) | ~45 min |
+| Testing & Documentation | ~30 min |
+| **Total** | **~4 hours** |
 
 ---
 
 *This project was completed as part of the Apache Superset Fuzzy Search Enhancement assessment.*
-

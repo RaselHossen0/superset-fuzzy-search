@@ -1061,27 +1061,71 @@ export default function TableChart<D extends DataRecord = DataRecord>(
             typeof text === 'string' && searchText
               ? text
               : undefined;
+          
+          // Helper function to check if a word is similar to the search query (fuzzy match)
+          const isFuzzyMatch = (word: string, query: string): boolean => {
+            const wordLower = word.toLowerCase();
+            const queryLower = query.toLowerCase();
+            
+            // Exact substring match
+            if (wordLower.includes(queryLower) || queryLower.includes(wordLower)) {
+              return true;
+            }
+            
+            // Character overlap check for fuzzy matching
+            let matchingChars = 0;
+            for (const char of queryLower) {
+              if (wordLower.includes(char)) {
+                matchingChars++;
+              }
+            }
+            // If more than 60% of query chars match and word is long enough
+            return matchingChars / queryLower.length >= 0.6 && wordLower.length >= 2;
+          };
+
           const highlightedContent =
             highlightableText && searchText
               ? (() => {
+                  // First try exact substring match
                   const parts = highlightableText.split(
                     new RegExp(`(${escapeRegExp(searchText)})`, 'i'),
                   );
-                  if (parts.length === 1) {
-                    return text;
+                  if (parts.length > 1) {
+                    return (
+                      <>
+                        {parts.map((part, index) =>
+                          index % 2 === 1 ? (
+                            <mark key={index} style={{ backgroundColor: '#fff3cd', padding: '0 2px', borderRadius: '2px' }}>{part}</mark>
+                          ) : (
+                            // eslint-disable-next-line react/no-array-index-key
+                            <span key={index}>{part}</span>
+                          ),
+                        )}
+                      </>
+                    );
                   }
-                  return (
-                    <>
-                      {parts.map((part, index) =>
-                        index % 2 === 1 ? (
-                          <mark key={index}>{part}</mark>
-                        ) : (
-                          // eslint-disable-next-line react/no-array-index-key
-                          <span key={index}>{part}</span>
-                        ),
-                      )}
-                    </>
-                  );
+                  
+                  // If no exact match, try fuzzy word highlighting
+                  const words = highlightableText.split(/(\s+)/);
+                  let hasAnyMatch = false;
+                  const highlightedWords = words.map((word, index) => {
+                    // Skip whitespace
+                    if (/^\s+$/.test(word)) {
+                      return <span key={index}>{word}</span>;
+                    }
+                    
+                    if (isFuzzyMatch(word, searchText)) {
+                      hasAnyMatch = true;
+                      return (
+                        <mark key={index} style={{ backgroundColor: '#fff3cd', padding: '0 2px', borderRadius: '2px' }}>
+                          {word}
+                        </mark>
+                      );
+                    }
+                    return <span key={index}>{word}</span>;
+                  });
+                  
+                  return hasAnyMatch ? <>{highlightedWords}</> : text;
                 })()
               : text;
           return (
@@ -1223,6 +1267,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       toggleFilter,
       handleContextMenu,
       allowRearrangeColumns,
+      searchText, // Added for search result highlighting
     ],
   );
 

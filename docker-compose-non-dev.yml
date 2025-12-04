@@ -32,6 +32,8 @@ x-superset-volumes:
 x-common-build: &common-build
   context: .
   target: dev
+  args:
+    DEV_MODE: "true"
   # Removed cache_from due to image availability issues
 
 services:

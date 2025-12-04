@@ -234,8 +234,21 @@ function addPreamble(entry) {
   return PREAMBLE.concat([path.join(APP_DIR, entry)]);
 }
 
-// SWC configuration for TypeScript/JavaScript transpilation
+// Babel configuration for TypeScript/JavaScript transpilation
+// (Replaced SWC due to native plugin issues on macOS)
+// Uses babel.config.js automatically
 function createSwcLoader(syntax = 'typescript', tsx = true) {
+  return {
+    loader: 'babel-loader',
+    options: {
+      cacheDirectory: true,
+      envName: isDevMode ? 'development' : 'production',
+    },
+  };
+}
+
+// Keep old function signature for compatibility (unused)
+function _createSwcLoaderOld(syntax = 'typescript', tsx = true) {
   return {
     loader: 'swc-loader',
     options: {
