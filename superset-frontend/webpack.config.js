@@ -469,7 +469,8 @@ const config = {
       {
         test: /\.tsx?$/,
         exclude: [/\.test.tsx?$/, /node_modules/],
-        use: ['thread-loader', createSwcLoader('typescript', true)],
+        // Disable thread-loader to avoid SWC plugin issues in Docker/CI
+        use: [createSwcLoader('typescript', true)],
       },
       {
         test: /\.jsx?$/,
