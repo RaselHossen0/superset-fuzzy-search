@@ -80,6 +80,6 @@ superset-frontend/
 ---
 
 *Document prepared for Apache Superset Fuzzy Search Implementation*
-*Author: Rasel Hossen*
+*Author: Sarim Hassan*
 *Date: December 2024*
 

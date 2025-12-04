@@ -12,7 +12,7 @@ This project enhances Apache Superset's table visualization with **fuzzy search 
 
 ```bash
 # Clone the repository
-git clone https://github.com/RaselHossen0/superset-fuzzy-search.git
+git clone https://github.com/SarimHassan/superset-fuzzy-search.git
 cd superset-fuzzy-search
 
 # Start backend services with Docker
@@ -238,7 +238,7 @@ With more time, the following enhancements could be added:
 
 ## Author
 
-**Rasel Hossen**  
+**Sarim Hassan**  
 December 2024
 
 ---
