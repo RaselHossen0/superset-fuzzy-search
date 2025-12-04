@@ -192,17 +192,36 @@ With more time, the following enhancements could be added:
 
 ## 6️⃣ Screenshots
 
-### Before: Table without Search
-![Before](screenshots/before-no-search.png)
-*Table visualization without search functionality*
+### Chart Editor - Table Configuration
+![Chart Editor](screenshots/11-chart-editor-table-configuration.png)
+*Table chart configuration with 6 columns and search enabled*
 
-### After: Fuzzy Search with Highlighting
-![After](screenshots/after-fuzzy-search.png)
-*Searching "Koera" finds "South Korea" with yellow highlighting*
+### Exact Match Search - "South Korea"
+![Exact Match](screenshots/01-search-south-korea-exact-match.png)
+*Exact match search returning South Korea vaccine records*
 
-### Search Results
-![Results](screenshots/search-results-highlighted.png)
-*Multiple matches highlighted across columns*
+### Partial Match Search - "Korea"
+![Partial Match](screenshots/02-search-korea-partial-match-highlighted.png)
+*Partial match "Korea" finds all South Korea entries*
+
+### Fuzzy Search (Typo) - "Koera" → Korea
+![Fuzzy Typo](screenshots/03-search-koera-fuzzy-typo-match.png)
+*Typo "Koera" still finds "South Korea" using fuzzy matching*
+
+### Partial Match - "vaccin" → vaccine
+![Vaccin Search](screenshots/06-search-vaccin-partial-match.png)
+*Missing character "vaccin" finds vaccine products*
+
+### Case Insensitive - "dna" and "DNA"
+![DNA lowercase](screenshots/07-search-dna-lowercase-case-insensitive.png)
+*Lowercase "dna" finds DNA-based vaccines*
+
+![DNA uppercase](screenshots/08-search-DNA-uppercase-case-insensitive.png)
+*Uppercase "DNA" produces same results - case insensitive*
+
+### No Results - "xyz123"
+![No Results](screenshots/05-search-xyz123-no-results.png)
+*Non-matching search shows "No matching records found"*
 
 ---
 
